@@ -9,13 +9,14 @@ def json_from_url(url):
         return data
 
 def addurls_from_csv(csv, dataset='', filenameformat='{path}', urlformat='{url}'):
-    addurls.Addurls.__call__(dataset=dataset,
-                             urlfile=csv,
-                             filenameformat=filenameformat,
-                             urlformat=urlformat,
-                             fast=True,
-                             meta=['location={location}', 'sha256={sha}'],
-                             ifexists='overwrite')
+    add = addurls.Addurls()
+    add(dataset=dataset,
+        urlfile=csv,
+        filenameformat=filenameformat,
+        urlformat=urlformat,
+        fast=True,
+        meta=['location={location}', 'sha256={sha256}'],
+        ifexists='overwrite')
 
 def osf_to_csv(osf_dict, csv):
     with open(csv, 'w') as f:
