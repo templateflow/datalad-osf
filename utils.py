@@ -14,7 +14,7 @@ def addurls_from_csv(csv, dataset='', filenameformat='{path}', urlformat='{url}'
         urlfile=csv,
         filenameformat=filenameformat,
         urlformat=urlformat,
-        fast=True,
+        fast=False,
         meta=['location={location}', 'sha256={sha256}'],
         ifexists='overwrite')
 
