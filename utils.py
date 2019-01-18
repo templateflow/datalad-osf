@@ -45,6 +45,15 @@ def get_datasets(url, name=None):
         return [''.join([url, item['attributes']['path']]) for item in superset['data']
             if item['attributes']['name'] == name]
 
+def prepare_paths(urlbase, url):
+    superset = json_from_url(url)
+    for item in superset['data']:
+        if item['attributes']['kind'] == 'folder':
+            path = item['attributes']['materialized'][1:]
+            pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+            prepare_paths(urlbase=urlbase,
+                          url=''.join([urlbase, item['attributes']['path']]))
+
 def get_osf_recursive(urlbase, url):
     bfr = []
     superset = json_from_url(url)
@@ -64,11 +73,12 @@ def update_dataset(key, name, csv=None):
     osf_to_csv(data, csv)
     addurls_from_csv(csv)
 
-def update_recursive(key=None, urlbase=None, csv=None, tags=[]):
-    if urlbase is None:
-        urlbase = url_from_key(key)
+def update_recursive(key, csv=None):
+    urlbase = url_from_key(key)
     data = {'data': get_osf_recursive(urlbase, urlbase)}
     if csv is None:
         csv = '/tmp/recursive.csv'
     osf_to_csv(data, csv)
+    prepare_paths(urlbase, urlbase)
+    addurls_from_csv(csv)
 
