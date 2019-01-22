@@ -20,7 +20,7 @@ __version__ = '.'.join(map(str, _ver))
 CLASSIFIERS = ["Development Status :: 3 - Alpha",
                "Environment :: Console",
                "Intended Audience :: Science/Research",
-               "License :: OSI Approved :: MIT License",
+               "License :: OSI Approved :: Apache License",
                "Operating System :: OS Independent",
                "Programming Language :: Python",
                "Topic :: Scientific/Engineering"]
