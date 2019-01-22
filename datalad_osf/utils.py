@@ -11,6 +11,7 @@ Example
 key = 'ue5gx' # templateflow dataset
 subset = 'tpl-NKI'
 update_recursive(key, subset)
+
 """
 import urllib.request, pathlib, json, re
 import datalad.plugin.addurls as addurls
@@ -110,7 +111,6 @@ def prepare_paths(csv, filenameformat='{path}'):
         that each file's path should be generated from the `path` column of
         the CSV.
     """
-    print(csv)
     with open(csv) as file:
         reader = DictReader(file)
         for row in reader:
