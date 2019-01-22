@@ -1,15 +1,31 @@
-import urllib.request, pathlib, json
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+"""
+Recursive datalad downloader for OSF
+------------------------------------
+
+Example
+-------
+key = 'ue5gx' # templateflow dataset
+subset = 'tpl-NKI'
+update_recursive(key, subset)
+"""
+import urllib.request, pathlib, json, re
 import datalad.plugin.addurls as addurls
 
-key = 'ue5gx'
 
 def url_from_key(key):
-    return 'https://files.osf.io/v1/resources/{}/providers/osfstorage/'.format(key)
+    return ('https://files.osf.io/v1/resources/{}'
+            '/providers/osfstorage/'.format(key))
+
 
 def json_from_url(url):
     with urllib.request.urlopen(url) as page:
         data = json.loads(page.read().decode())
         return data
+
 
 def addurls_from_csv(csv, dataset='', filenameformat='{path}', urlformat='{url}'):
     add = addurls.Addurls()
@@ -20,6 +36,7 @@ def addurls_from_csv(csv, dataset='', filenameformat='{path}', urlformat='{url}'
         fast=False,
         meta=['location={location}', 'sha256={sha256}'],
         ifexists='overwrite')
+
 
 def osf_to_csv(osf_dict, csv, subset=None):
     if subset is not None:
@@ -38,18 +55,6 @@ def osf_to_csv(osf_dict, csv, subset=None):
                 path = re.sub(subset_re, '', path)[1:] if subset else path[1:]
                 f.write('{},{},{},{},{}\n'.format(name, url, url, sha, path))
 
-def get_datasets(url, name=None):
-    superset = json_from_url(url)
-    if name is None:
-        return [(item['attributes']['name'],
-                ''.join([url, item['attributes']['path']]))
-                if item['attributes']['kind'] == 'folder'
-                else ''.join([url, item['attributes']['path']])
-                for item in superset['data']]
-    else:
-        return [''.join([url, item['attributes']['path']])
-                for item in superset['data']
-                if item['attributes']['name'] == name]
 
 def prepare_paths(csv):
     with open(csv) as f:
@@ -63,14 +68,6 @@ def prepare_paths(csv):
                 if path:
                     pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
-def prepare_paths2(urlbase, url):
-    superset = json_from_url(url)
-    for item in superset['data']:
-        if item['attributes']['kind'] == 'folder':
-            path = item['attributes']['materialized'][1:]
-            pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-            prepare_paths(urlbase=urlbase,
-                          url=''.join([urlbase, item['attributes']['path']]))
 
 def get_osf_recursive(urlbase, url, subset=None, depth=0):
     bfr = []
@@ -94,13 +91,6 @@ def get_osf_recursive(urlbase, url, subset=None, depth=0):
                 bfr = bfr + [item]
     return bfr
 
-def update_dataset(key, name, csv=None):
-    url = url_from_key(key)
-    data = json_from_url(get_datasets(url, name)[0])
-    if csv is None:
-        csv = '/tmp/{}.csv'.format(name)
-    osf_to_csv(data, csv)
-    addurls_from_csv(csv)
 
 def update_recursive(key, csv=None, subset=None):
     """
@@ -124,4 +114,3 @@ def update_recursive(key, csv=None, subset=None):
     osf_to_csv(data, csv, subset)
     prepare_paths(csv)
     addurls_from_csv(csv)
-
