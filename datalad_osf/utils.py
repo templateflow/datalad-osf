@@ -14,6 +14,7 @@ update_recursive(key, subset)
 
 """
 import urllib.request, pathlib, json, re
+import datalad.api
 import datalad.plugin.addurls as addurls
 from csv import DictReader
 
