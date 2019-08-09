@@ -2,57 +2,58 @@
 # -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
-"""
-Recursive datalad downloader for OSF
-------------------------------------
+"""Utility functions for a recursive datalad downloader for OSF.
 
 Example
 -------
 key = 'ue5gx' # templateflow dataset
 subset = 'tpl-NKI'
-update_recursive(key, subset)
+update_recursive(key, subset, limit_to_ext='.nii.gz')
 
 """
-import urllib.request, pathlib, json, re
-import datalad.api
-import datalad.plugin.addurls as addurls
+import urllib.request
+import pathlib
+import json
+import re
 from csv import DictReader
+
+import datalad.plugin.addurls as addurls
 
 
 def url_from_key(key):
-    """Given an OSF project key, retrieve the URL of the project metadata.
-    """
+    """Given an OSF project key, retrieve the URL of the project metadata."""
     return ('https://files.osf.io/v1/resources/{}'
             '/providers/osfstorage/'.format(key))
 
 
 def json_from_url(url):
-    """Download the JSON metadata at the target URL into a python dictionary.
-    """
+    """Download JSON metadata at target URL into python dictionary."""
     with urllib.request.urlopen(url) as page:
         data = json.loads(page.read().decode())
         return data
 
 
 def addurls_from_csv(csv, filenameformat='{path}', urlformat='{url}'):
-    """
+    """Add URLs to datalad repository.
+
     Use datalad to add data from the URLs specified in a provided CSV file
     into the paths specified in the CSV file, generating any required
     directory structure in the process.
 
     Parameters
     ----------
-    csv: str
+    csv : str
         Path to the CSV where the metadata should be stored.
-    filenameformat: str
+    filenameformat : str
         String format to use to extract filesystem paths from the CSV (based
         on headers in the OSF dictionary). For instance, `{path}` indicates
         that each file's path should be generated from the `path` column of
         the CSV.
-    urlformat: str
+    urlformat : str
         String format to use to extract URLs from the CSV (based on headers
         in the OSF dictionary). For instance, `{url}` indicates that each
         file's URL should be generated from the `url` column of the CSV.
+
     """
     prepare_paths(csv, filenameformat=filenameformat)
     add = addurls.Addurls()
@@ -66,21 +67,21 @@ def addurls_from_csv(csv, filenameformat='{path}', urlformat='{url}'):
 
 
 def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext=None):
-    """
-    Construct a CSV file from OSF metadata.
+    """Construct a CSV file from OSF metadata.
 
     Parameters
     ----------
-    osf_dict: dict
+    osf_dict : dict
         Dictionary of file metadata pulled from OSF, as by `json_from_url`.
-    csv: str
+    csv : str
         Path to the CSV where the metadata should be stored.
-    subset: str or None
+    subset : str | None
         If this value is defined, then only the specified subdirectories of
         the project will be included.
-    limit_to_ext: str or None
+    limit_to_ext : str | None
         If this value is defined, only files with names that end with
         `limit_to_ext` are written to the `csv`.
+
     """
     if subset is not None:
         subset_re = '/{}'.format(subset) if subset[0] != '/' else subset
@@ -102,20 +103,19 @@ def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext=None):
 
 
 def prepare_paths(csv, filenameformat='{path}'):
-    """
-    Generate the directory structure of the datalad dataset by mirroring the
-    OSF directory structure.
+    """Mirror OSF directory structure to generate datalad directory structure.
 
     Parameters
     ----------
-    csv: str
+    csv : str
         CSV containing metadata and paths for the datalad dataset, with
         paths defined relative to the dataset root directory.
-    filenameformat: str
+    filenameformat : str
         String format to use to extract filesystem paths from the CSV (based
         on headers in the OSF dictionary). For instance, `{path}` indicates
         that each file's path should be generated from the `path` column of
         the CSV.
+
     """
     with open(csv) as file:
         reader = DictReader(file)
@@ -127,9 +127,7 @@ def prepare_paths(csv, filenameformat='{path}'):
 
 
 def _get_osf_recursive(urlbase, url, subset=None, depth=0):
-    """Retrieve metadata for all files from the OSF project or from a
-    specified subset of the OSF project.
-    """
+    """Retrieve metadata for all files from OSF project or its `subset`."""
     bfr = []
     superset = json_from_url(url)
     if subset is not None:
@@ -153,42 +151,41 @@ def _get_osf_recursive(urlbase, url, subset=None, depth=0):
 
 
 def get_osf_recursive(url, subset=None):
-    """
-    Retrieve metadata for all files from the OSF project or from a specified
-    subset of the OSF project.
+    """Retrieve metadata for all files from OSF project or its `subset`.
 
     Parameters
     ----------
-    url: str
+    url : str
         The OSF project's metadata URL.
-    subset: str or None
+    subset : str | None
         If this value is defined, then only the specified subdirectories of
         the project will be included.
+
     """
     return _get_osf_recursive(url, url, subset, depth=0)
 
 
 def update_recursive(key, csv=None, subset=None, limit_to_ext=None):
-    """
-    Recursively add data from an OSF project to the current datalad dataset.
+    """Recursively add data from OSF project to the current datalad dataset.
 
     Parameters
     ----------
-    key: str
+    key : str
         The project key on OSF. This is the string that follows `osf.io` in
         the project URL.
-    csv: str or None
+    csv : str | None
         Path where the CSV of files to be added will be written.
-    subset: list(str) or None
+    subset : list of str | None
         If this value is defined, then only the specified subdirectories of
         the project will be included.
-    limit_to_ext: str or None
+    limit_to_ext : str | None
         If this value is defined, only files with names that end with
         `limit_to_ext` are written to the `csv`.
+
     """
     url = url_from_key(key)
     data = {'data': get_osf_recursive(url, subset)}
     if csv is None:
         csv = '/tmp/{}_recursive.csv'.format(key)
-    osf_to_csv(data, csv, subset, limit_to_ext)
+    osf_to_csv(data, csv, subset)
     addurls_from_csv(csv)
