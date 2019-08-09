@@ -65,7 +65,7 @@ def addurls_from_csv(csv, filenameformat='{path}', urlformat='{url}'):
         ifexists='overwrite')
 
 
-def osf_to_csv(osf_dict, csv, subset=None):
+def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext=None):
     """
     Construct a CSV file from OSF metadata.
 
@@ -78,6 +78,9 @@ def osf_to_csv(osf_dict, csv, subset=None):
     subset: str or None
         If this value is defined, then only the specified subdirectories of
         the project will be included.
+    limit_to_ext: str or None
+        If this value is defined, only files with names that end with
+        `limit_to_ext` are written to the `csv`.
     """
     if subset is not None:
         subset_re = '/{}'.format(subset) if subset[0] != '/' else subset
@@ -87,8 +90,10 @@ def osf_to_csv(osf_dict, csv, subset=None):
         f.write('name,url,location,sha256,path\n')
         for item in osf_dict['data']:
             name = item['attributes']['name']
-            ext = ''.join(pathlib.Path(name).suffixes)
-            if item['attributes']['kind'] == 'file' and ext == '.nii.gz':
+            if limit_to_ext is not None:
+                if name.endswith(limit_to_ext):
+                    continue
+            if item['attributes']['kind'] == 'file':
                 sha = item['attributes']['extra']['hashes']['sha256']
                 url = item['links']['download']
                 path = item['attributes']['materialized']
@@ -163,7 +168,7 @@ def get_osf_recursive(url, subset=None):
     return _get_osf_recursive(url, url, subset, depth=0)
 
 
-def update_recursive(key, csv=None, subset=None):
+def update_recursive(key, csv=None, subset=None, limit_to_ext=None):
     """
     Recursively add data from an OSF project to the current datalad dataset.
 
@@ -177,10 +182,13 @@ def update_recursive(key, csv=None, subset=None):
     subset: list(str) or None
         If this value is defined, then only the specified subdirectories of
         the project will be included.
+    limit_to_ext: str or None
+        If this value is defined, only files with names that end with
+        `limit_to_ext` are written to the `csv`.
     """
     url = url_from_key(key)
     data = {'data': get_osf_recursive(url, subset)}
     if csv is None:
         csv = '/tmp/{}_recursive.csv'.format(key)
-    osf_to_csv(data, csv, subset)
+    osf_to_csv(data, csv, subset, limit_to_ext)
     addurls_from_csv(csv)
