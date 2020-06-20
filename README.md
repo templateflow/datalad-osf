@@ -18,3 +18,7 @@ import datalad_osf
 datalad_osf.update_recursive(key, subset)
 ```
 `update_recursive` uses the OSF project metadata to determine the directory structure required to locally replicate (any subset of) the OSF dataset and then adds the files or references synced from OSF to the datalad dataset.
+
+## Alternatives
+
+There is also a newer `datalad-osf` extension: https://github.com/datalad/datalad-osf
