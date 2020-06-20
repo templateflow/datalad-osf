@@ -92,7 +92,7 @@ def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext=None):
         for item in osf_dict['data']:
             name = item['attributes']['name']
             if limit_to_ext is not None:
-                if name.endswith(limit_to_ext):
+                if not name.endswith(limit_to_ext):
                     continue
             if item['attributes']['kind'] == 'file':
                 sha = item['attributes']['extra']['hashes']['sha256']
