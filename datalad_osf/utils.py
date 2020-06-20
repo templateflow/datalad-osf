@@ -66,7 +66,7 @@ def addurls_from_csv(csv, filenameformat='{path}', urlformat='{url}'):
         ifexists='overwrite')
 
 
-def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext=None):
+def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext='.nii.gz'):
     """Construct a CSV file from OSF metadata.
 
     Parameters
@@ -165,7 +165,7 @@ def get_osf_recursive(url, subset=None):
     return _get_osf_recursive(url, url, subset, depth=0)
 
 
-def update_recursive(key, csv=None, subset=None, limit_to_ext=None):
+def update_recursive(key, csv=None, subset=None, limit_to_ext='.nii.gz'):
     """Recursively add data from OSF project to the current datalad dataset.
 
     Parameters
