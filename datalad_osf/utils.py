@@ -80,7 +80,7 @@ def osf_to_csv(osf_dict, csv, subset=None, limit_to_ext='.nii.gz'):
         the project will be included.
     limit_to_ext : str | None
         If this value is defined, only files with names that end with
-        `limit_to_ext` are written to the `csv`.
+        `limit_to_ext` are written to the `csv`.  Defaults to '.nii.gz'.
 
     """
     if subset is not None:
@@ -180,12 +180,12 @@ def update_recursive(key, csv=None, subset=None, limit_to_ext='.nii.gz'):
         the project will be included.
     limit_to_ext : str | None
         If this value is defined, only files with names that end with
-        `limit_to_ext` are written to the `csv`.
+        `limit_to_ext` are written to the `csv`. Defaults to '.nii.gz'.
 
     """
     url = url_from_key(key)
     data = {'data': get_osf_recursive(url, subset)}
     if csv is None:
         csv = '/tmp/{}_recursive.csv'.format(key)
-    osf_to_csv(data, csv, subset)
+    osf_to_csv(data, csv, subset, limit_to_ext)
     addurls_from_csv(csv)
